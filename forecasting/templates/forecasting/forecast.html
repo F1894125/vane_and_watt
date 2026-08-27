@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block title %}
+    Make Prediction
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <h2 class="card-title text-center mb-2">Make a Forecast</h2>
+                    <p class="text-center text-muted mb-4 small">
+                        Select a domain below to make weather or energy forecasts.
+                    </p>
+
+                    <!-- Domain Switching Buttons -->
+                    <div class="d-flex justify-content-center mb-4">
+                        <div class="btn-group" role="group" aria-label="Domain Selector">
+                            <input type="radio" class="btn-check" name="domain_selector" id="btn-weather" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary px-4" for="btn-weather">☀️ Weather Forecast</label>
+
+                            <input type="radio" class="btn-check" name="domain_selector" id="btn-energy" autocomplete="off">
+                            <label class="btn btn-outline-primary px-4" for="btn-energy">⚡ Energy Forecast</label>
+                        </div>
+                    </div>
+
+                    <!-- Weather Form -->
+                    <form id="weather-form" data-predict-url="{% url 'forecasting:predict_weather' %}">
+                        <div class="row">
+                            {% for field in weather_form %} <!-- Too many fields to type manually -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% comment %}
+                                    {% if field.help_text %}
+                                        <div class="form-text text-muted small">{{ field.help_text }}</div>
+                                    {% endif %}
+                                    {% endcomment %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-2">Predict Weather (LSTM)</button>
+                    </form>
+
+                    <!-- Energy Form (Hidden by default) -->
+                    <form id="energy-form" data-predict-url="{% url 'forecasting:predict_energy' %}" style="display: none;">
+                        <div class="mb-4 p-3 border rounded bg-light">
+                            <label class="form-label fw-bold d-block mb-2">Forecast Category</label>
+                            {% for radio in energy_form.category %}
+                                <div class="form-check form-check-inline me-4">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="row">
+                            {% for field in energy_form %}
+                                {% if field.name != 'category' %}
+                                    <div class="col-md-4 mb-3">
+                                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                        {{ field }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 mt-2">Predict Energy (XGBoost)</button>
+                    </form>
+
+                    <div id="prediction-message" class="alert alert-danger mt-3" role="alert" style="display: none;"></div>
+
+                    <hr class="my-4">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'forecasting/js/forecast.js' %}"></script>
+{% endblock content %}

@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: vane_and_watt_pg
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: vaneandwatt123
+      POSTGRES_DB: vane_and_watt
+    ports:
+      - "5433:5432"  # Native Postgres is on port 5432, so we use 5433
+    networks:
+      - vane_and_watt_network
+    volumes:
+      - vane_and_watt_pg_volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+
+  redis:
+    image: redis:7-alpine
+    container_name: vane_and_watt_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - vane_and_watt_network
+
+  vane_and_watt_app:
+    build: .
+    container_name: vane_and_watt_app
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - DATABASE_URL=postgresql://postgres:vaneandwatt123@db:5432/vane_and_watt
+      - REDIS_URL=redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    networks:
+      - vane_and_watt_network
+
+  celery_worker:
+    build: .
+    container_name: vane_and_watt_celery
+    restart: always
+    command: celery -A config worker --loglevel=info -P solo
+    depends_on:
+      - db
+      - redis
+      - vane_and_watt_app
+    environment:
+      - DATABASE_URL=postgresql://postgres:vaneandwatt123@db:5432/vane_and_watt
+      - REDIS_URL=redis://redis:6379/0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - vane_and_watt_network
+
+networks:
+  vane_and_watt_network:
+    driver: bridge
+
+volumes:
+  vane_and_watt_pg_volume:

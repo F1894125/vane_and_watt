@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Prediction Detail</title>
+    </head>
+    
+    <body class="bg-light">
+        <div class="container py-4">
+            <div class="card">
+                <div class="card-body p-4">
+                    <h3 class="mb-1">
+                        {% if domain == 'weather' %}
+                            ☀️ Weather Forecast Detail
+                        {% else %}
+                            ⚡ Energy Forecast Detail
+                        {% endif %}
+                    </h3>
+                    <p class="text-muted mb-4">ID: {{ prediction.id }}</p>
+
+                    <div class="bg-light p-3 mb-4 rounded">
+                        <div class="row">
+                            <div class="col-4">
+                                <p class="text-muted mb-0"><small>Created At</small></p>
+                                <p class="mb-0"><strong>{{ prediction.created_at|date:"Y-m-d H:i" }}</strong></p>
+                            </div>
+                            <div class="col-4">
+                                <p class="text-muted mb-0"><small>Status</small></p>
+                                {% if prediction.prediction %}
+                                    {% if prediction.prediction.status == 'SUCCESS' %}
+                                        <span class="badge bg-success">SUCCESS</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">FAILED</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">IN PROGRESS</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-4">
+                                <p class="text-muted mb-0"><small>Model</small></p>
+                                <p class="mb-0"><strong>{% if domain == 'weather' %}London Weather{% else %}Energy {{ prediction.get_category_display }}{% endif %}</strong></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="mb-3">Forecast Results</h4>
+                    {% if prediction.prediction and prediction.prediction.status == 'SUCCESS' %}
+                        {% if domain == 'weather' %}
+                            <table class="table table-bordered text-center mb-4">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Avg Temp (°C)</th>
+                                        <th>Min (°C)</th>
+                                        <th>Max (°C)</th>
+                                        <th>Pres (hPa)</th>
+                                        <th>Wind (km/h)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for day_item in prediction.prediction.predictions %}
+                                        <tr>
+                                            <td><strong>Day {{ day_item.day }}</strong></td>
+                                            <td>{{ day_item.forecast.avg_temp_c|floatformat:"1" }}</td>
+                                            <td>{{ day_item.forecast.min_temp_c|floatformat:"1" }}</td>
+                                            <td>{{ day_item.forecast.max_temp_c|floatformat:"1" }}</td>
+                                            <td>{{ day_item.forecast.avg_sea_level_pres_hpa|floatformat:"1" }}</td>
+                                            <td>{{ day_item.forecast.avg_wind_speed_kmh|floatformat:"1" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="alert alert-success text-center mb-4">
+                                <p class="text-uppercase text-muted mb-2">Predicted {{ prediction.get_category_display }}</p>
+                                <h2 class="mb-0"><strong>{{ prediction.prediction.prediction|floatformat:"2" }}</strong> <span class="text-muted h4">MW</span></h2>
+                            </div>
+                        {% endif %}
+                    {% elif prediction.prediction and prediction.prediction.status == 'FAILED' %}
+                        <div class="alert alert-danger mb-4">
+                            <strong>Inference Error:</strong> {{ prediction.prediction.error }}
+                        </div>
+                    {% endif %}
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Input Parameters</h5>
+                    {% if domain == 'weather' %}
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>10-Day Input Sequence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Avg Temp (°C)</td><td><code>{{ prediction.avg_temp_c }}</code></td></tr>
+                                <tr><td>Min Temp (°C)</td><td><code>{{ prediction.min_temp_c }}</code></td></tr>
+                                <tr><td>Max Temp (°C)</td><td><code>{{ prediction.max_temp_c }}</code></td></tr>
+                                <tr><td>Sea Level Pres (hPa)</td><td><code>{{ prediction.avg_sea_level_pres_hpa }}</code></td></tr>
+                                <tr><td>Wind Speed (km/h)</td><td><code>{{ prediction.avg_wind_speed_kmh }}</code></td></tr>
+                                <tr><td>Precipitation (mm)</td><td><code>{{ prediction.precipitation_mm }}</code></td></tr>
+                                <tr><td>Is Weekend</td><td><code>{{ prediction.is_weekend }}</code></td></tr>
+                                <tr><td>Is Raining</td><td><code>{{ prediction.is_raining }}</code></td></tr>
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <div class="border p-2 rounded">Category: <strong>{{ prediction.category }}</strong></div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="border p-2 rounded">Hour: <strong>{{ prediction.hour }}</strong></div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="border p-2 rounded">Day: <strong>{{ prediction.day }}</strong></div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="border p-2 rounded">Month: <strong>{{ prediction.month }}</strong></div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="border p-2 rounded">Day of Week: <strong>{{ prediction.dayofweek }}</strong></div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="border p-2 rounded">Lag 1: <strong>{{ prediction.lag_1 }}</strong></div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="border p-2 rounded">Lag 24: <strong>{{ prediction.lag_24 }}</strong></div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block title %}
+    Sign Up
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <h2 class="card-title text-center mb-2">Let's Get Started</h2>
+                    
+                    <form
+                        id="register-form"
+                        data-register-url="{% url 'account:register' %}"
+                        data-login-url="{% url 'account:login' %}"
+                        enctype="multipart/form-data"
+                    >
+                        <div class="mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                            {{ form.last_name }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                            {{ form.username }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">E-mail</label>
+                            {{ form.email }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.date_of_birth.id_for_label }}" class="form-label">Date of Birth</label>
+                            {{ form.date_of_birth }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.photo.id_for_label }}" class="form-label">Profile Picture</label>
+                            {{ form.photo }}
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                            {{ form.password1 }}
+                        </div>
+                        <div class="mb-4">
+                            <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                            {{ form.password2 }}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Create My Account</button>
+                    </form>
+
+                    <div id="register-error" class="alert alert-danger mt-3" role="alert" style="display: none;"></div>
+                    
+                    <hr class="my-4">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static "account/js/register.js" %}"></script>
+{% endblock content %}

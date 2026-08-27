@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Home
+{% endblock title %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-lg-9">
+        <!-- Main Content Card with sunflower yellow background and centered text -->
+        <div class="p-5 rounded-3 shadow-sm border text-center" style="background-color: #ffda44;">
+            <div class="container-fluid py-2">
+                <h1 class="h2 fw-bold text-dark mb-4">
+                    Time-Series Forecasting for Weather &amp; Energy Requirements
+                </h1>
+                
+                <p class="fs-5 text-dark opacity-75">
+                    Modeling historical meteorological data
+                    to forecast future weather conditions.
+                </p>
+                
+                <hr class="my-4 w-50 mx-auto text-dark opacity-25">
+
+                <p class="fs-5 text-dark opacity-75 mb-4">
+                    Modeling historical power generation and consumption
+                    trends to forecast future requirements.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

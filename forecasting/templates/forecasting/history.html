@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+    Prediction History
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-11">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="card-title mb-1">Prediction History</h2>
+                            <p class="text-muted small mb-0">View all your previous weather and energy forecast requests.</p>
+                        </div>
+
+                        <!-- Filter Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle btn-sm" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Filter: {% if filter_type == 'weather' %}Weather{% elif filter_type == 'energy' %}Energy{% else %}All{% endif %}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="filterDropdown">
+                                <li><a class="dropdown-item {% if filter_type == 'all' or not filter_type %}active{% endif %}" href="?type=all">All Predictions</a></li>
+                                <li><a class="dropdown-item {% if filter_type == 'weather' %}active{% endif %}" href="?type=weather">Weather Only</a></li>
+                                <li><a class="dropdown-item {% if filter_type == 'energy' %}active{% endif %}" href="?type=energy">Energy Only</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {% if predictions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">Domain</th>
+                                        <th scope="col">Prediction ID</th>
+                                        <th scope="col">Category / Target</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Created At</th>
+                                        <th scope="col" class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for pred in predictions %}
+                                        <tr>
+                                            <td>
+                                                {% if pred.precipitation_mm is not None %}
+                                                    <span class="badge bg-primary">☀️ Weather</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">⚡ Energy</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-monospace small">{{ pred.id|stringformat:".8s" }}...</td>
+                                            <td>
+                                                {% if pred.precipitation_mm is not None %}
+                                                    4-Day Weather Forecast
+                                                {% else %}
+                                                    {{ pred.get_category_display }}
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if pred.prediction %}
+                                                    {% if pred.prediction.status == 'SUCCESS' %}
+                                                        <span class="badge bg-success">Completed</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Failed</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark">Processing</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="small text-muted">{{ pred.created_at|date:"Y-m-d H:i:s" }}</td>
+                                            <td class="text-end">
+                                                <a href="{{ pred.get_absolute_url }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination Navigation -->
+                        {% if is_paginated %}
+                            <nav class="mt-4" aria-label="Prediction history pagination">
+                                <ul class="pagination justify-content-center mb-0">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?type={{ filter_type }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item"><a class="page-link" href="?type={{ filter_type }}&page={{ num }}">{{ num }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?type={{ filter_type }}&page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled"><span class="page-link">Next</span></li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="text-center py-5">
+                            <p class="text-muted mb-3">No prediction records found.</p>
+                            <a href="{% url 'forecasting:prediction_form' %}" class="btn btn-primary btn-sm">Make Your First Forecast</a>
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+    Prediction Detail
+{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-9">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h2 class="card-title mb-1">
+                                {% if domain == 'weather' %}
+                                    ☀️ Weather Forecast Detail
+                                {% else %}
+                                    ⚡ Energy Forecast Detail
+                                {% endif %}
+                            </h2>
+                            <p class="text-muted small mb-0">ID: {{ prediction.id }}</p>
+                        </div>
+                        <a href="{% url 'forecasting:history' %}" class="btn btn-outline-secondary btn-sm">&larr; Back to History</a>
+                    </div>
+
+                    <!-- Metadata Header -->
+                    <div class="row bg-light p-3 rounded mb-4 g-2">
+                        <div class="col-sm-4">
+                            <span class="text-muted small d-block">Created At</span>
+                            <strong>{{ prediction.created_at|date:"Y-m-d H:i:s" }}</strong>
+                        </div>
+                        <div class="col-sm-4">
+                            <span class="text-muted small d-block">Status</span>
+                            {% if prediction.prediction %}
+                                {% if prediction.prediction.status == 'SUCCESS' %}
+                                    <span class="badge bg-success">SUCCESS</span>
+                                {% else %}
+                                    <span class="badge bg-danger">FAILED</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning text-dark">IN PROGRESS</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-sm-4">
+                            <span class="text-muted small d-block">Model</span>
+                            <strong>{% if domain == 'weather' %}London Weather (LSTM){% else %}Energy {{ prediction.get_category_display }} (XGBoost){% endif %}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Forecast Output Section -->
+                    <h4 class="mb-3">Forecast Output</h4>
+                    {% if prediction.prediction and prediction.prediction.status == 'SUCCESS' %}
+                        {% if domain == 'weather' %}
+                            <!-- 4-Day Forecast Table -->
+                            <div class="table-responsive mb-4">
+                                <table class="table table-bordered align-middle text-center mb-0">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Day</th>
+                                            <th>Avg Temp (°C)</th>
+                                            <th>Min Temp (°C)</th>
+                                            <th>Max Temp (°C)</th>
+                                            <th>Sea Level Pres (hPa)</th>
+                                            <th>Wind Speed (km/h)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for day_item in prediction.prediction.predictions %}
+                                            <tr>
+                                                <td class="fw-bold">Day {{ day_item.day }}</td>
+                                                <td>{{ day_item.forecast.avg_temp_c|floatformat:"2" }}</td>
+                                                <td>{{ day_item.forecast.min_temp_c|floatformat:"2" }}</td>
+                                                <td>{{ day_item.forecast.max_temp_c|floatformat:"2" }}</td>
+                                                <td>{{ day_item.forecast.avg_sea_level_pres_hpa|floatformat:"2" }}</td>
+                                                <td>{{ day_item.forecast.avg_wind_speed_kmh|floatformat:"2" }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <!-- Energy Output Display -->
+                            <div class="alert alert-success p-4 text-center mb-4">
+                                <h5 class="text-uppercase text-muted mb-2">Predicted {{ prediction.get_category_display }}</h5>
+                                <h1 class="display-4 fw-bold mb-0">{{ prediction.prediction.prediction|floatformat:"2" }} <small class="fs-4 text-muted">MW</small></h1>
+                            </div>
+                        {% endif %}
+                    {% elif prediction.prediction and prediction.prediction.status == 'FAILED' %}
+                        <div class="alert alert-danger mb-4">
+                            <strong>Inference Error:</strong> {{ prediction.prediction.error }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mb-4">
+                            Inference task is currently queued in Celery. Please refresh this page momentarily.
+                        </div>
+                    {% endif %}
+
+                    <hr class="my-4">
+
+                    <!-- Inputs Used -->
+                    <h5 class="mb-3">Input Parameters</h5>
+                    {% if domain == 'weather' %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Feature</th>
+                                        <th>10-Day Input Sequence</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>Avg Temp (°C)</td><td><code>{{ prediction.avg_temp_c }}</code></td></tr>
+                                    <tr><td>Min Temp (°C)</td><td><code>{{ prediction.min_temp_c }}</code></td></tr>
+                                    <tr><td>Max Temp (°C)</td><td><code>{{ prediction.max_temp_c }}</code></td></tr>
+                                    <tr><td>Sea Level Pres (hPa)</td><td><code>{{ prediction.avg_sea_level_pres_hpa }}</code></td></tr>
+                                    <tr><td>Wind Speed (km/h)</td><td><code>{{ prediction.avg_wind_speed_kmh }}</code></td></tr>
+                                    <tr><td>Precipitation (mm)</td><td><code>{{ prediction.precipitation_mm }}</code></td></tr>
+                                    <tr><td>Is Weekend (0/1)</td><td><code>{{ prediction.is_weekend }}</code></td></tr>
+                                    <tr><td>Is Raining (0/1)</td><td><code>{{ prediction.is_raining }}</code></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="row g-3">
+                            <div class="col-6 col-md-4"><div class="border p-2 rounded">Category: <strong>{{ prediction.category }}</strong></div></div>
+                            <div class="col-6 col-md-4"><div class="border p-2 rounded">Hour: <strong>{{ prediction.hour }}</strong></div></div>
+                            <div class="col-6 col-md-4"><div class="border p-2 rounded">Day: <strong>{{ prediction.day }}</strong></div></div>
+                            <div class="col-6 col-md-4"><div class="border p-2 rounded">Month: <strong>{{ prediction.month }}</strong></div></div>
+                            <div class="col-6 col-md-4"><div class="border p-2 rounded">Day of Week: <strong>{{ prediction.dayofweek }}</strong></div></div>
+                            <div class="col-6 col-md-4"><div class="border p-2 rounded">Lag 1: <strong>{{ prediction.lag_1 }}</strong></div></div>
+                            <div class="col-6 col-md-4"><div class="border p-2 rounded">Lag 24: <strong>{{ prediction.lag_24 }}</strong></div></div>
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
