@@ -42,7 +42,11 @@ def get_weather_model():
     global WEATHER_MODEL
 
     if WEATHER_MODEL is None:
-        WEATHER_MODEL = tf.keras.models.load_model(settings.WEATHER_MODEL)
+        WEATHER_MODEL = tf.keras.models.load_model(
+            settings.WEATHER_MODEL,
+            compile=False,
+        )
+        WEATHER_MODEL.jit_compile = False
 
     return WEATHER_MODEL
 

@@ -82,7 +82,7 @@ DATABASES = {
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'), # Should be Docker Compose service name
-        'PORT': config('DB_PORT'),
+        'PORT': config('DB_PORT', cast=int),
         'TEST': {
             'NAME': config('TEST_DB_NAME'),
         },
@@ -222,8 +222,14 @@ WEATHER_X_SCALER = ARTIFACTS_ROOT / "london_weather_preprocessors" / "london_wea
 WEATHER_Y_SCALER = ARTIFACTS_ROOT / "london_weather_preprocessors" / "london_weather_y_scaler.pkl"
 
 # Celery and Redis
-CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
-CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+CELERY_BROKER_URL = config(
+    "CELERY_BROKER_URL",
+    default=config("REDIS_URL", default="redis://127.0.0.1:6379/0"),
+)
+CELERY_RESULT_BACKEND = config(
+    "CELERY_RESULT_BACKEND",
+    default=config("REDIS_URL", default="redis://127.0.0.1:6379/0"),
+)
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
